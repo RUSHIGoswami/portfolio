@@ -1,45 +1,57 @@
 import { motion } from "framer-motion";
 import { SparklesCore } from "../ui/sparkles";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
-const solutions = ["AI solutions", "Frontend UI", "Backend solutions"];
+const solutions = ["AI Innovations", "Web Solutions", "Cloud Systems"];
 
 // Find the longest solution for consistent width
-const maxLength = Math.max(...solutions.map((s) => s.length));
+const maxLength = Math.max(...solutions.map((s) => s.length)) - 3;
 const placeholderText = "\u00A0".repeat(maxLength);
 
 // Memoized TypeWriter component to prevent unnecessary re-renders
-const TypeWriter = memo(({ onComplete }) => {
+const TypeWriter = memo(() => {
   const [currentSolution, setCurrentSolution] = useState(0);
   const [displayText, setDisplayText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const updateText = useCallback(() => {
-    const solution = solutions[currentSolution];
-    if (!isDeleting) {
-      if (displayText.length < solution.length) {
-        setDisplayText(solution.slice(0, displayText.length + 1));
-        return 150; // 150ms delay for typing each character
-      } else {
-        setIsDeleting(true);
-        return 4000; // 4 second pause after typing
-      }
-    } else {
-      if (displayText.length > 0) {
-        setDisplayText(solution.slice(0, displayText.length - 1));
-        return 80; // 80ms delay for deleting each character
-      } else {
-        setIsDeleting(false);
-        setCurrentSolution((prev) => (prev + 1) % solutions.length);
-        return 1500; // 1.5 second pause before next word
-      }
-    }
-  }, [currentSolution, displayText, isDeleting]);
-
   useEffect(() => {
-    const timeout = setTimeout(updateText, updateText());
+    let timeout;
+    const solution = solutions[currentSolution];
+
+    const getDelay = () => {
+      if (!isDeleting) {
+        if (displayText.length < solution.length) {
+          return 100; // typing delay
+        }
+        return 300; // pause after typing
+      } else {
+        if (displayText.length > 0) {
+          return 50; // deleting delay
+        }
+        return 100; // pause before next word
+      }
+    };
+
+    const updateText = () => {
+      if (!isDeleting) {
+        if (displayText.length < solution.length) {
+          setDisplayText(solution.slice(0, displayText.length + 1));
+        } else {
+          setIsDeleting(true);
+        }
+      } else {
+        if (displayText.length > 0) {
+          setDisplayText(solution.slice(0, displayText.length - 1));
+        } else {
+          setIsDeleting(false);
+          setCurrentSolution((prev) => (prev + 1) % solutions.length);
+        }
+      }
+    };
+
+    timeout = setTimeout(updateText, getDelay());
     return () => clearTimeout(timeout);
-  }, [updateText]);
+  }, [currentSolution, displayText, isDeleting]);
 
   return (
     <div
@@ -56,32 +68,36 @@ const TypeWriter = memo(({ onComplete }) => {
           transform: "translateZ(0)",
           WebkitFontSmoothing: "antialiased",
           backfaceVisibility: "hidden",
-          transition: "color 0.3s ease-in-out"
+          transition: "color 0.1s ease-in-out",
         }}
       >
         {displayText}
       </span>
-      <motion.span
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 1, 1, 0] }}
-        transition={{
-          duration: 1.2,
-          ease: "easeInOut",
-          times: [0, 0.2, 0.8, 1],
-          repeat: Infinity,
-          repeatDelay: 0.2,
-        }}
-        className="inline-block w-[4px] h-4 md:h-6 lg:h-8 bg-blue-500 ml-1"
-      />
     </div>
   );
 });
 
 TypeWriter.displayName = "TypeWriter";
 
+const styles = `
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+`;
+
+if (typeof document !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+}
+
 export default function Hero() {
   return (
-    <div id="home" className="h-screen w-full bg-black flex flex-col items-center justify-center overflow-hidden rounded-md relative">
+    <div
+      id="home"
+      className="h-screen w-full bg-black flex flex-col items-center justify-center overflow-hidden rounded-md relative"
+    >
       <div className="w-full absolute inset-0 h-screen">
         <SparklesCore
           id="tsparticlesfullpage"
@@ -98,23 +114,23 @@ export default function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 3.5 }}
+          transition={{ duration: 2.5 }}
           className="flex flex-col items-center gap-4 p-8 backdrop-blur-sm rounded-lg border border-white/10 bg-black/20"
         >
-          <motion.h1
+          <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 4.5, delay: 1.2 }}
-            className="text-4xl md:text-6xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500"
+            transition={{ duration: 1.5, delay: 0.6 }}
+            className="text-5xl md:text-6xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500"
           >
             Rushi M Goswami
-          </motion.h1>
+          </motion.h2>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 4.5, delay: 1.3 }}
-            className="text-xl md:text-2xl text-white/90 font-semibold"
+            transition={{ duration: 1.5, delay: 0.6 }}
+            className="text-lg md:text-xl text-white/90 font-semibold"
           >
             Software Engineer
           </motion.p>
@@ -122,10 +138,12 @@ export default function Hero() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 4.5, delay: 1.4 }}
-            className="mt-4 w-full max-w-3xl text-base sm:text-xl md:text-3xl lg:text-4xl font-bold"
+            transition={{ duration: 1.5, delay: 0.6 }}
+            className="mt-4 w-full max-w-1xl text-base sm:text-xl md:text-3xl lg:text-4xl font-bold"
           >
-            <span className="text-white/90">Building next gen </span>
+            <span className="text-white/90">
+              Engineering excellence through{" "}
+            </span>
             <TypeWriter />
           </motion.div>
         </motion.div>

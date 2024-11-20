@@ -1,5 +1,6 @@
-import { Box, Typography, Container, Card, CardContent, Grid, Chip, Stack } from '@mui/material';
+import { Box, Container, Grid, Stack, Chip } from '@mui/material';
 import { motion } from "framer-motion";
+import { SectionWrapper } from './ui/section-wrapper';
 
 const Projects = () => {
   const projects = [
@@ -21,8 +22,8 @@ const Projects = () => {
   ];
 
   return (
-    <Box id="projects" py={8}>
-      <Container>
+    <SectionWrapper id="projects">
+      <Container className="relative z-10">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -39,17 +40,21 @@ const Projects = () => {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="p-6 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm"
+                className="p-6 rounded-lg border border-white/10 bg-black/80 backdrop-blur-sm transition-all group"
               >
-                <h3 className="text-xl font-semibold mb-4 text-white/90">
+                <h3 className="text-xl font-semibold mb-4 text-white/90 group-hover:text-white transition-colors">
                   {project.title}
                 </h3>
-                <p className="text-white/70 mb-4">
+                <p className="text-white/70 group-hover:text-white/80 transition-colors mb-4">
                   {project.description}
                 </p>
                 <Stack direction="row" spacing={1} flexWrap="wrap" gap={1} mt={2}>
                   {project.tools.map((tool) => (
-                    <Chip key={tool} label={tool} color="primary" variant="outlined" />
+                    <Chip 
+                      key={tool} 
+                      label={tool} 
+                      className="bg-white/10 hover:bg-white/20 transition-colors text-white/80 hover:text-white border-white/20"
+                    />
                   ))}
                 </Stack>
               </motion.div>
@@ -57,7 +62,7 @@ const Projects = () => {
           ))}
         </Grid>
       </Container>
-    </Box>
+    </SectionWrapper>
   );
 };
 

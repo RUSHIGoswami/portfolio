@@ -40,8 +40,8 @@ export default function Navbar() {
       setScrolled(isScrolled);
 
       // Update active section based on scroll position
-      const sections = navItems.map(item => item.link.substring(1));
-      const currentSection = sections.find(section => {
+      const sections = navItems.map((item) => item.link.substring(1));
+      const currentSection = sections.find((section) => {
         const element = document.getElementById(section);
         if (element) {
           const rect = element.getBoundingClientRect();
@@ -63,12 +63,12 @@ export default function Navbar() {
     e.preventDefault();
     const targetId = link.substring(1);
     const element = document.getElementById(targetId);
-    
+
     if (element) {
       const targetPosition = element.offsetTop - 60;
       window.scrollTo({
         top: targetPosition,
-        behavior: "smooth"
+        behavior: "smooth",
       });
     }
   };
@@ -85,11 +85,13 @@ export default function Navbar() {
       }}
       className="fixed top-4 left-1/2 -translate-x-1/2 z-50"
     >
-      <nav className={`
+      <nav
+        className={`
         px-6 py-3 rounded-full border border-white/[0.2] bg-black/50 backdrop-blur-md
         ${scrolled ? "bg-black/80" : ""}
         transition-all duration-300
-      `}>
+      `}
+      >
         <div className="flex items-center gap-6">
           {navItems.map((item, idx) => (
             <motion.a
@@ -101,23 +103,24 @@ export default function Navbar() {
               transition={{ delay: idx * 0.1 }}
               className="group relative"
             >
-              <div className={`
+              <div
+                className={`
                 relative p-2 transition-colors duration-300
-                ${activeSection === item.link.substring(1) 
-                  ? "text-blue-500" 
-                  : "text-white/70 hover:text-white"
+                ${
+                  activeSection === item.link.substring(1)
+                    ? "text-purple-500 bg-clip-text"
+                    : "text-white/70 hover:text-white"
                 }
-              `}>
+              `}
+              >
                 <item.icon size={20} />
-                <motion.span 
-                  className="absolute -bottom-12 left-1/2 -translate-x-1/2 px-3 py-2 bg-black/80 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
-                >
+                <motion.span className="absolute -bottom-12 left-1/2 -translate-x-1/2 px-3 py-2 bg-black/80 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                   {item.name}
                 </motion.span>
                 {activeSection === item.link.substring(1) && (
                   <motion.div
                     layoutId="navbar-indicator"
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-blue-500"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-purple-500"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}

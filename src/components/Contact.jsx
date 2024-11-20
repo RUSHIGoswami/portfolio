@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Mail, Phone, Linkedin, Github } from "lucide-react";
+import { SectionWrapper } from './ui/section-wrapper';
 
 const contactInfo = [
   {
@@ -30,7 +31,7 @@ const contactInfo = [
 
 export default function Contact() {
   return (
-    <section id="contact" className="relative py-20">
+    <SectionWrapper id="contact">
       {/* Background pattern */}
       <div className="absolute inset-0 bg-black">
         <div className="absolute inset-0 bg-dot-pattern opacity-20" />
@@ -82,6 +83,6 @@ export default function Contact() {
           </div>
         </div>
       </div>
-    </section>
+    </SectionWrapper>
   );
 }
