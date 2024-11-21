@@ -1,4 +1,4 @@
-import { SparklesCore } from "../../ui/sparkles";
+import { SparklesCore } from "./sparkles";
 
 export const SectionWrapper = ({ children, id, className = "" }) => {
   return (
@@ -22,9 +22,7 @@ export const SectionWrapper = ({ children, id, className = "" }) => {
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-black/50 pointer-events-none z-10" />
 
       {/* Content */}
-      <div className="relative z-20 w-full">
-        {children}
-      </div>
+      <div className="relative z-20 w-full">{children}</div>
     </section>
   );
 };

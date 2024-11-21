@@ -1,13 +1,13 @@
-import { Box, Typography, Container, Grid, Paper, Chip, useTheme, useMediaQuery } from '@mui/material';
-import CodeIcon from '@mui/icons-material/Code';
-import StorageIcon from '@mui/icons-material/Storage';
-import PsychologyIcon from '@mui/icons-material/Psychology';
-import CloudIcon from '@mui/icons-material/Cloud';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import TerminalIcon from '@mui/icons-material/Terminal';
-import BiotechIcon from '@mui/icons-material/Biotech';
+import { Box, Typography, Grid, Paper, Chip, useTheme } from "@mui/material";
+import CodeIcon from "@mui/icons-material/Code";
+import StorageIcon from "@mui/icons-material/Storage";
+import PsychologyIcon from "@mui/icons-material/Psychology";
+import CloudIcon from "@mui/icons-material/Cloud";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import TerminalIcon from "@mui/icons-material/Terminal";
+import BiotechIcon from "@mui/icons-material/Biotech";
 import { motion } from "framer-motion";
-import { SectionWrapper } from './ui/section-wrapper';
+import { SectionWrapper } from "../ui/section-wrapper";
 
 const skillCategories = [
   {
@@ -18,12 +18,12 @@ const skillCategories = [
   {
     title: "Database",
     icon: <StorageIcon fontSize="large" color="primary" />,
-    skills: ["Postgres", "Azure Data Tables", "MySQL", "Neo4j- Graph DB"],
+    skills: ["Postgres", "Azure Data Tables", "MySQL", "Neo4j - Graph DB"],
   },
   {
     title: "Web Technologies",
     icon: <TerminalIcon fontSize="large" color="primary" />,
-    skills: ["React", "Django", "FastAPI", "Flask", "Git/GitHub", "VSCode"],
+    skills: ["React", "Django", "FastAPI", "Flask", "Git/GitHub"],
   },
   {
     title: "Machine Learning",
@@ -37,8 +37,7 @@ const skillCategories = [
       "SVM",
       "Decision Tree",
       "Random Forest",
-      "Ada-Boost",
-      "XG-Boost",
+      "Ada-Boost & XG-Boost",
       "K-means Clustering",
     ],
   },
@@ -48,18 +47,12 @@ const skillCategories = [
     skills: [
       "NLTK",
       "Spacy",
-      "Stop-words",
-      "Stemming",
-      "Lemmatization",
-      "Tokenization",
       "TF-IDF",
       "Bag of Words",
       "Word2Vec",
-      "RNNs",
       "CNNs",
       "LSTM",
       "Yolo",
-      "Activation Functions",
       "Pytorch",
       "Tensorflow",
     ],
@@ -73,16 +66,15 @@ const skillCategories = [
       "Prompt Engineering",
       "RAG",
       "Tool Calling",
-      "Fine Tuning",
-      "PEFT",
+      "Fine Tuning + PEFT",
       "VectorDBs",
       "Agents",
-      "Langchain",
-      "LanGraph",
+      "Langchain + LangGraph",
       "LlamaIndex",
       "HuggingFace tools",
       "Langfuse",
       "Cursor",
+      "Windsurf",
     ],
   },
   {
@@ -97,14 +89,12 @@ const skillCategories = [
       "Azure Machine Learning",
       "AWS bedrock",
       "AWS sagemaker",
-      "AWS SQS",
     ],
   },
 ];
 
 export default function Skills() {
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <SectionWrapper id="skills">
@@ -113,11 +103,11 @@ export default function Skills() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-3xl md:text-4xl font-bold text-center mb-12 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500"
+          className="text-3xl md:text-4xl font-bold text-center mb-10 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500"
         >
           Skills
         </motion.h2>
-        
+
         <Grid container spacing={4}>
           {skillCategories.map((category, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
@@ -125,7 +115,7 @@ export default function Skills() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                style={{ height: '100%' }}
+                style={{ height: "100%" }}
               >
                 <Paper
                   elevation={0}
@@ -133,30 +123,30 @@ export default function Skills() {
                   whileHover={{ scale: 1.02 }}
                   className="h-full p-6 bg-black/60 hover:bg-black/70 transition-all border border-white/10 rounded-lg"
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     {category.icon}
-                    <Typography 
-                      variant="h6" 
+                    <Typography
+                      variant="h6"
                       sx={{
                         fontSize: {
-                          xs: '1.1rem',
-                          sm: '1.25rem'
+                          xs: "1.1rem",
+                          sm: "1.25rem",
                         },
-                        color: 'primary.main',
+                        color: "primary.main",
                         ml: 1,
-                        fontWeight: 600
+                        fontWeight: 600,
                       }}
                     >
                       {category.title}
                     </Typography>
                   </Box>
-                  <Box 
-                    sx={{ 
-                      display: 'flex',
-                      flexWrap: 'wrap',
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
                       gap: 1,
                       flex: 1,
-                      alignContent: 'flex-start'
+                      alignContent: "flex-start",
                     }}
                   >
                     {category.skills.map((skill, skillIndex) => (
@@ -164,13 +154,13 @@ export default function Skills() {
                         key={skillIndex}
                         label={skill}
                         sx={{
-                          bgcolor: 'rgba(255, 255, 255, 0.05)',
-                          color: 'text.primary',
-                          '&:hover': {
-                            bgcolor: 'rgba(255, 255, 255, 0.1)',
+                          bgcolor: "rgba(255, 255, 255, 0.05)",
+                          color: "text.primary",
+                          "&:hover": {
+                            bgcolor: "rgba(255, 255, 255, 0.1)",
                           },
-                          fontSize: '0.85rem',
-                          height: '28px'
+                          fontSize: "0.85rem",
+                          height: "28px",
                         }}
                       />
                     ))}
@@ -183,4 +173,4 @@ export default function Skills() {
       </div>
     </SectionWrapper>
   );
-};
+}

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Mail, Phone, Linkedin, Github } from "lucide-react";
-import { SectionWrapper } from './ui/section-wrapper';
+import { SectionWrapper } from "../ui/section-wrapper";
 
 const contactInfo = [
   {
@@ -59,8 +59,16 @@ export default function Contact() {
                 <motion.a
                   key={contact.label}
                   href={contact.link}
-                  target={contact.icon !== Phone && contact.icon !== Mail ? "_blank" : undefined}
-                  rel={contact.icon !== Phone && contact.icon !== Mail ? "noopener noreferrer" : undefined}
+                  target={
+                    contact.icon !== Phone && contact.icon !== Mail
+                      ? "_blank"
+                      : undefined
+                  }
+                  rel={
+                    contact.icon !== Phone && contact.icon !== Mail
+                      ? "noopener noreferrer"
+                      : undefined
+                  }
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}

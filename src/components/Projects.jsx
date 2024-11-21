@@ -1,23 +1,50 @@
-import { Box, Container, Grid, Stack, Chip } from '@mui/material';
+import { Container, Grid, Stack, Chip } from "@mui/material";
 import { motion } from "framer-motion";
-import { SectionWrapper } from './ui/section-wrapper';
+import { SectionWrapper } from "../ui/section-wrapper";
 
 const Projects = () => {
   const projects = [
     {
       title: "AI based large construction project analyser",
-      description: "Developed a production level micro-services architecture with multiple servers and lambdas to build construction project's operation and maintenance analysis, task generators, tender requirement extractions, tender bidding analysis and many more AI features.",
-      tools: ["Python FastAPI", "Azure functions", "Azure OpenAI", "Langchain", "Unstructured", "Neo4j"],
+      description:
+        "Developed a production level micro-services architecture with multiple servers and lambdas to build construction project's operation and maintenance analysis, task generators, tender requirement extractions, tender bidding analysis and many more AI features.",
+      tools: [
+        "Python",
+        "FastAPI",
+        "Azure functions",
+        "Azure OpenAI",
+        "Langchain",
+        "Unstructured",
+        "Neo4j",
+      ],
     },
     {
       title: "AI Legal Research Tool",
-      description: "Developed an AI application for legal professionals with legal search engine, judgment summaries, research book generation and many more AI features. Engineered batch systems with 5 different ML pipeline running parallel on spot instances and built NER system to extract and classify legal entities from large legal document corpus.",
-      tools: ["Flask", "Elasticsearch", "OpenAI API", "RAG", "BiLSTM", "Selenium", "Azure machine learning"],
+      description:
+        "Developed an AI application for legal professionals with legal search engine, judgment summaries, research book generation and many more AI features. Engineered batch systems with 5 different ML pipeline running parallel on spot instances and built NER system to extract and classify legal entities from large legal document corpus.",
+      tools: [
+        "Flask",
+        "Elasticsearch",
+        "OpenAI API",
+        "RAG",
+        "BiLSTM",
+        "Selenium",
+        "Azure machine learning",
+      ],
     },
     {
       title: "AI Sales Agent",
-      description: "Implemented an AI application that automates the entire sales process, from building rapport to converting leads. Utilized chat and instructive agents, reduced API calls by 60% through code refactoring resulting efficient and cost-effective way to manage CRMs and drive sales.",
-      tools: ["FastAPI", "Reactjs", "ChromaDB", "Agent Architectures", "OpenAI API", "Zapier", "Salesforce- Apex"],
+      description:
+        "Implemented an AI application that automates the entire sales process, from building rapport to converting leads. Utilized chat and instructive agents, reduced API calls by 60% through code refactoring resulting efficient and cost-effective way to manage CRMs and drive sales.",
+      tools: [
+        "FastAPI",
+        "Reactjs",
+        "ChromaDB",
+        "Agent Architectures",
+        "OpenAI API",
+        "Zapier",
+        "Salesforce - Apex",
+      ],
     },
   ];
 
@@ -48,11 +75,17 @@ const Projects = () => {
                 <p className="text-white/70 group-hover:text-white/80 transition-colors mb-4">
                   {project.description}
                 </p>
-                <Stack direction="row" spacing={1} flexWrap="wrap" gap={1} mt={2}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  flexWrap="wrap"
+                  gap={1}
+                  mt={2}
+                >
                   {project.tools.map((tool) => (
-                    <Chip 
-                      key={tool} 
-                      label={tool} 
+                    <Chip
+                      key={tool}
+                      label={tool}
                       className="bg-white/10 hover:bg-white/20 transition-colors text-white/80 hover:text-white border-white/20"
                     />
                   ))}

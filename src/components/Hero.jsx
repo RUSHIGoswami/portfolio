@@ -5,7 +5,7 @@ import { memo, useEffect, useState } from "react";
 const solutions = ["AI Innovations", "Web Solutions", "Cloud Systems"];
 
 // Find the longest solution for consistent width
-const maxLength = Math.max(...solutions.map((s) => s.length)) - 3;
+const maxLength = Math.max(...solutions.map((s) => s.length));
 const placeholderText = "\u00A0".repeat(maxLength);
 
 // Memoized TypeWriter component to prevent unnecessary re-renders
@@ -121,7 +121,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.5, delay: 0.6 }}
-            className="text-5xl md:text-6xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500"
+            className="text-5xl md:text-6xl font-bold text-center mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500"
           >
             Rushi M Goswami
           </motion.h2>
@@ -139,7 +139,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.5, delay: 0.6 }}
-            className="mt-4 w-full max-w-1xl text-base sm:text-xl md:text-3xl lg:text-4xl font-bold"
+            className="mt-3 w-full max-w-1xl text-base sm:text-xl md:text-3xl lg:text-4xl font-bold"
           >
             <span className="text-white/90">
               Engineering excellence through{" "}
