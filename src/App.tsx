@@ -1,5 +1,5 @@
-import { React, useState, useMemo } from "react";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import React, { useState, useMemo } from "react";
+import { ThemeProvider, createTheme, Theme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter as Router } from "react-router-dom";
 import Navbar from "./components/Navbar";
@@ -8,10 +8,12 @@ import About from "./components/About";
 import Skills from "./components/Skills";
 import Projects from "./components/Projects";
 import Contact from "./components/Contact";
-import { Box } from "@mui/material";
-function App() {
-  const [mode, setMode] = useState("dark");
-  const theme = useMemo(
+import { Box, PaletteMode } from "@mui/material";
+
+const App: React.FC = () => {
+  const [mode] = useState<PaletteMode>("dark");
+
+  const theme: Theme = useMemo(
     () =>
       createTheme({
         palette: {
@@ -29,38 +31,51 @@ function App() {
             paper: mode === "dark" ? "#1E293B" : "#FFFFFF",
           },
           text: {
-            primary: mode === "dark" ? "#F1F5F9" : "#1E293B",
+            primary: mode === "dark" ? "#F1F5F9" : "#0F172A",
             secondary: mode === "dark" ? "#CBD5E1" : "#475569",
           },
         },
         typography: {
           fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
           h1: {
-            fontWeight: 800,
+            fontSize: "3.5rem",
+            fontWeight: 700,
+            lineHeight: 1.2,
+            "@media (max-width:600px)": {
+              fontSize: "2.5rem",
+            },
           },
           h2: {
-            fontWeight: 700,
+            fontSize: "2.25rem",
+            fontWeight: 600,
+            lineHeight: 1.3,
+            "@media (max-width:600px)": {
+              fontSize: "1.875rem",
+            },
           },
           h3: {
-            fontWeight: 700,
-          },
-          h4: {
+            fontSize: "1.875rem",
             fontWeight: 600,
+            lineHeight: 1.3,
+            "@media (max-width:600px)": {
+              fontSize: "1.5rem",
+            },
           },
-          h5: {
-            fontWeight: 600,
+          body1: {
+            fontSize: "1rem",
+            lineHeight: 1.5,
           },
-          h6: {
-            fontWeight: 600,
+          button: {
+            textTransform: "none",
+            fontWeight: 500,
           },
         },
         components: {
-          MuiContainer: {
+          MuiButton: {
             styleOverrides: {
               root: {
-                "@media (min-width: 1200px)": {
-                  maxWidth: "1400px",
-                },
+                borderRadius: "0.5rem",
+                padding: "0.5rem 1.5rem",
               },
             },
           },
@@ -75,50 +90,28 @@ function App() {
       }),
     [mode]
   );
-  const toggleColorMode = () => {
-    setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
-  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
         <Box
           sx={{
-            width: "100%",
-            margin: 0,
-            padding: 0,
-            overflow: "hidden",
             minHeight: "100vh",
             bgcolor: "background.default",
             color: "text.primary",
-            position: "relative",
-            "&::before": {
-              content: '""',
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background:
-                mode === "dark"
-                  ? "radial-gradient(circle at center, rgba(124, 58, 237, 0.1) 0%, rgba(15, 23, 42, 0) 70%)"
-                  : "radial-gradient(circle at center, rgba(109, 40, 217, 0.05) 0%, rgba(248, 250, 252, 0) 70%)",
-              pointerEvents: "none",
-              zIndex: 1,
-            },
           }}
         >
-          <Box sx={{ position: "relative", zIndex: 2 }}>
-            <Navbar colorMode={{ mode, toggleColorMode }} />
-            <Hero />
-            <About />
-            <Skills />
-            <Projects />
-            <Contact />
-          </Box>
+          <Navbar />
+          <Hero />
+          <About />
+          <Skills />
+          <Projects />
+          <Contact />
         </Box>
       </Router>
     </ThemeProvider>
   );
-}
+};
+
 export default App;

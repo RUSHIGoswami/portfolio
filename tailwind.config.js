@@ -11,7 +11,7 @@ export default {
       },
       animation: {
         'border-move': 'border-move 4s ease infinite',
-        shimmer: "shimmer 2s linear infinite",
+        shimmer: "shimmer 3s ease-in-out infinite",
         spotlight: "spotlight 2s ease .75s 1 forwards",
         'gradient': 'gradient 8s linear infinite',
       },
@@ -21,12 +21,8 @@ export default {
           '50%': { backgroundPosition: '100% 50%' },
         },
         shimmer: {
-          from: {
-            backgroundPosition: "0 0",
-          },
-          to: {
-            backgroundPosition: "-200% 0",
-          },
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' }
         },
         spotlight: {
           "0%": {
