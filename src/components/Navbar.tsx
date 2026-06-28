@@ -1,150 +1,48 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Home, User, Code, Wrench, Mail, LucideIcon } from "lucide-react";
-import * as Tooltip from "@radix-ui/react-tooltip";
+import React from "react";
+import { ViewMode } from "../App";
 
-interface NavItem {
-  name: string;
-  link: string;
-  icon: LucideIcon;
+interface NavbarProps {
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
 }
 
-interface NavLinkProps {
-  item: NavItem;
-  isActive: boolean;
-}
-
-const navItems: NavItem[] = [
-  {
-    name: "Home",
-    link: "#home",
-    icon: Home,
-  },
-  {
-    name: "About",
-    link: "#about",
-    icon: User,
-  },
-  {
-    name: "Skills",
-    link: "#skills",
-    icon: Wrench,
-  },
-  {
-    name: "Projects",
-    link: "#projects",
-    icon: Code,
-  },
-  {
-    name: "Contact",
-    link: "#contact",
-    icon: Mail,
-  },
+const tabs: { id: ViewMode; label: string }[] = [
+  { id: "bento", label: "Grid" },
+  { id: "graph", label: "Graph" },
 ];
 
-const NavLink: React.FC<NavLinkProps> = ({ item, isActive }) => {
-  const Icon = item.icon;
-
+const Navbar: React.FC<NavbarProps> = ({ viewMode, setViewMode }) => {
   return (
-    <Tooltip.Provider delayDuration={100}>
-      <Tooltip.Root>
-        <Tooltip.Trigger asChild>
-          <motion.a
-            href={item.link}
-            className="flex items-center justify-center p-3 transition-colors duration-200 relative"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Icon
-              className={`w-5 h-5 transition-colors duration-200 ${
-                isActive ? "text-purple-500" : "text-white/80 hover:text-white"
+    <nav className="fixed top-4 inset-x-0 z-50 flex justify-center px-4">
+      <div className="w-full max-w-7xl flex items-center justify-between gap-4">
+        {/* Brand mark — a node glyph + monospace handle, tying back to the graph identity. */}
+        <div className="hidden sm:flex items-center gap-2.5 px-3 py-2 rounded-full bg-panel/80 backdrop-blur-md border border-line">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-signal/60 animate-pulse-soft" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-signal" />
+          </span>
+          <span className="font-mono text-xs text-paper tracking-tight">rushi.goswami</span>
+        </div>
+
+        {/* View toggle */}
+        <div className="flex items-center gap-1 p-1 bg-panel/80 backdrop-blur-md rounded-full border border-line shadow-xl">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setViewMode(tab.id)}
+              aria-pressed={viewMode === tab.id}
+              className={`px-4 py-1.5 rounded-full font-mono text-xs uppercase tracking-wider transition-all ${
+                viewMode === tab.id
+                  ? "bg-signal/15 text-signal"
+                  : "text-muted hover:text-paper hover:bg-line/50"
               }`}
-            />
-          </motion.a>
-        </Tooltip.Trigger>
-        <Tooltip.Portal>
-          <Tooltip.Content
-            side="right"
-            align="center"
-            className="hidden md:block data-[state=delayed-open]:data-[side=right]:animate-slideLeftAndFade bg-black/60 text-white px-3 py-1.5 rounded-md text-sm shadow-lg z-[60] backdrop-blur-sm border border-white/10"
-            sideOffset={5}
-          >
-            {item.name}
-            <Tooltip.Arrow className="fill-black/60" />
-          </Tooltip.Content>
-        </Tooltip.Portal>
-      </Tooltip.Root>
-    </Tooltip.Provider>
-  );
-};
-
-const Navbar: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<string>("home");
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = navItems.map((item) => item.link.substring(1));
-      const currentSection = sections.find((section) => {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          return rect.top <= 100 && rect.bottom >= 100;
-        }
-        return false;
-      });
-
-      if (currentSection) {
-        setActiveSection(currentSection);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  return (
-    <>
-      <style>{`
-        @keyframes slideLeftAndFade {
-          from {
-            opacity: 0;
-            transform: translateX(-2px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-      `}</style>
-      <motion.nav
-        initial={{
-          x: window.innerWidth >= 768 ? -100 : 0,
-          y: window.innerWidth >= 768 ? 0 : 100,
-        }}
-        animate={{
-          x: 0,
-          y: 0,
-        }}
-        className="fixed z-50
-          md:left-8 md:top-1/2 md:-translate-y-1/2
-          left-1/2 bottom-8 -translate-x-1/2 md:translate-x-0"
-      >
-        <div
-          className="flex md:flex-col items-center bg-black/60 backdrop-blur-lg rounded-full 
-          py-2 md:py-3 px-3 md:px-2
-          space-x-1 md:space-x-0 md:space-y-1
-          shadow-lg shadow-black/20 border border-white/10"
-        >
-          {navItems.map((item) => (
-            <NavLink
-              key={item.name}
-              item={item}
-              isActive={activeSection === item.link.substring(1)}
-            />
+            >
+              {tab.label}
+            </button>
           ))}
         </div>
-      </motion.nav>
-    </>
+      </div>
+    </nav>
   );
 };
 

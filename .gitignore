@@ -21,3 +21,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Environment variables
+.env
+
+# Sanity Studio
+studio/dist
+studio/.sanity
