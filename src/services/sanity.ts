@@ -1,5 +1,5 @@
 import { createClient } from "@sanity/client";
-import imageUrlBuilder from "@sanity/image-url";
+import { createImageUrlBuilder } from "@sanity/image-url";
 import {
   fallbackEducation,
   fallbackExperience,
@@ -21,7 +21,7 @@ const projectId = (import.meta as any).env.VITE_SANITY_PROJECT_ID;
 const dataset = (import.meta as any).env.VITE_SANITY_DATASET || "production";
 
 let sanityClient: ReturnType<typeof createClient> | null = null;
-let builder: ReturnType<typeof imageUrlBuilder> | null = null;
+let builder: ReturnType<typeof createImageUrlBuilder> | null = null;
 
 if (projectId) {
   sanityClient = createClient({
@@ -30,7 +30,7 @@ if (projectId) {
     useCdn: true, // set to `false` to bypass the edge cache
     apiVersion: "2023-05-03", // use current date (YYYY-MM-DD) to target the latest API version
   });
-  builder = imageUrlBuilder(sanityClient);
+  builder = createImageUrlBuilder(sanityClient);
 }
 
 export function urlFor(source: any) {

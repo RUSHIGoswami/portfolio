@@ -188,7 +188,7 @@ export function answer(query: string, data: PortfolioData): AgentReply {
   if (has(tokens, "experience", "work", "job", "role", "company", "career", "promact", "employer")) {
     const e = data.experience;
     if (!e) return { text: "Experience details aren't loaded right now.", ...none };
-    const top = e.achievements.slice(0, 2).join("; ");
+    const top = (e.achievements ?? []).slice(0, 2).join("; ");
     return {
       text: `Rushi is a ${e.role} at ${e.company} (${e.duration}). Highlights: ${top}.`,
       nodeIds: [ROOT, NODE_EXP],
@@ -199,13 +199,13 @@ export function answer(query: string, data: PortfolioData): AgentReply {
   // Tech-term search across skills + project tooling.
   const matchedSkills: number[] = [];
   data.skills.forEach((cat, i) => {
-    const blob = `${cat.title} ${cat.skills.join(" ")}`;
+    const blob = `${cat.title ?? ""} ${(cat.skills ?? []).join(" ")}`;
     if (tokens.some((t) => hits(t, blob))) matchedSkills.push(i);
   });
 
   const matchedProjects: number[] = [];
   data.projects.forEach((proj, i) => {
-    const blob = `${proj.title} ${proj.description} ${proj.tools.join(" ")}`;
+    const blob = `${proj.title ?? ""} ${proj.description ?? ""} ${(proj.tools ?? []).join(" ")}`;
     if (tokens.some((t) => hits(t, blob))) matchedProjects.push(i);
   });
 

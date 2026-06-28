@@ -137,23 +137,26 @@ const BentoLayout: React.FC<BentoLayoutProps> = ({ onOpenGraph }) => {
               Generative AI.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              {contact.map((item) => {
-                const Icon = ContactIconMap[item.iconName] || Mail;
-                return (
-                  <a
-                    key={item.label}
-                    href={item.link}
-                    target={item.link.startsWith("http") ? "_blank" : undefined}
-                    rel="noopener noreferrer"
-                    aria-label={item.label}
-                    title={item.value}
-                    className="flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs bg-panel2 hover:bg-signal/10 text-paper/80 hover:text-signal rounded-md border border-line hover:border-signal/40 transition-colors"
-                  >
-                    <Icon size={14} />
-                    <span className="hidden sm:inline">{item.label}</span>
-                  </a>
-                );
-              })}
+              {contact
+                .filter((item) => item.link)
+                .map((item) => {
+                  const Icon = ContactIconMap[item.iconName] || Mail;
+                  const external = item.link.startsWith("http");
+                  return (
+                    <a
+                      key={item.label || item.link}
+                      href={item.link}
+                      target={external ? "_blank" : undefined}
+                      rel="noopener noreferrer"
+                      aria-label={item.label}
+                      title={item.value}
+                      className="flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs bg-panel2 hover:bg-signal/10 text-paper/80 hover:text-signal rounded-md border border-line hover:border-signal/40 transition-colors"
+                    >
+                      <Icon size={14} />
+                      <span className="hidden sm:inline">{item.label}</span>
+                    </a>
+                  );
+                })}
             </div>
           </div>
         </motion.div>
@@ -210,15 +213,15 @@ const BentoLayout: React.FC<BentoLayoutProps> = ({ onOpenGraph }) => {
                     <span className="font-medium text-sm">{cat.title}</span>
                   </div>
                   <div className="flex flex-wrap gap-2 sm:w-2/3">
-                    {cat.skills.slice(0, 8).map((skill) => (
+                    {(cat.skills ?? []).slice(0, 8).map((skill, j) => (
                       <span
-                        key={skill}
+                        key={`${skill}-${j}`}
                         className="px-2.5 py-1 font-mono text-xs bg-panel2 text-paper/75 rounded-md border border-line"
                       >
                         {skill}
                       </span>
                     ))}
-                    {cat.skills.length > 8 && (
+                    {(cat.skills?.length ?? 0) > 8 && (
                       <span className="px-2.5 py-1 font-mono text-xs text-muted">
                         +{cat.skills.length - 8}
                       </span>
@@ -253,9 +256,9 @@ const BentoLayout: React.FC<BentoLayoutProps> = ({ onOpenGraph }) => {
                 <h3 className="font-semibold text-paper mb-2">{proj.title}</h3>
                 <p className="text-sm text-muted line-clamp-3 mb-4">{proj.description}</p>
                 <div className="mt-auto flex flex-wrap gap-1.5">
-                  {proj.tools.slice(0, 3).map((tool) => (
+                  {(proj.tools ?? []).slice(0, 3).map((tool, j) => (
                     <span
-                      key={tool}
+                      key={`${tool}-${j}`}
                       className="font-mono text-[10px] px-2 py-0.5 bg-signal/10 text-signal rounded-sm"
                     >
                       {tool}
