@@ -19,8 +19,8 @@ import {
 export interface PortfolioData {
   projects: Project[];
   skills: SkillCategory[];
-  experience: ExperienceData | null;
-  education: Education | null;
+  experience: ExperienceData[];
+  education: Education[];
   articles: Article[];
   contact: ContactInfo[];
 }
@@ -35,14 +35,14 @@ export interface AgentReply {
 const ROOT = "root";
 const HUB_SKILLS = "hub-skills";
 const HUB_PROJECTS = "hub-projects";
-const NODE_EXP = "node-exp";
+const expId = (i: number) => `node-exp-${i}`;
 
 const skillId = (i: number) => `skill-${i}`;
 const projId = (i: number) => `proj-${i}`;
 
 const edgeRootSkills = "e-root-skills";
 const edgeRootProjects = "e-root-projects";
-const edgeRootExp = "e-root-exp";
+const edgeExp = (i: number) => `e-root-exp-${i}`;
 const edgeSkill = (i: number) => `e-skills-${i}`;
 const edgeProj = (i: number) => `e-projects-${i}`;
 
@@ -103,20 +103,22 @@ export function buildGraph(data: PortfolioData): { nodes: Node[]; edges: Edge[] 
     edges.push({ id: edgeProj(i), source: HUB_PROJECTS, target: projId(i) });
   });
 
-  // Experience node (below root).
-  if (data.experience) {
+  // Experience nodes (fan out below root).
+  data.experience.forEach((exp, i) => {
+    const n = data.experience.length;
+    const spread = (i - (n - 1) / 2) * 320;
     nodes.push({
-      id: NODE_EXP,
+      id: expId(i),
       type: "custom",
-      position: { x: 0, y: 320 },
+      position: { x: spread, y: 320 },
       data: {
-        label: data.experience.role,
-        sublabel: data.experience.company,
+        label: exp.role,
+        sublabel: exp.company,
         kind: "hub",
       },
     });
-    edges.push({ id: edgeRootExp, source: ROOT, target: NODE_EXP });
-  }
+    edges.push({ id: edgeExp(i), source: ROOT, target: expId(i) });
+  });
 
   return { nodes, edges };
 }
@@ -174,10 +176,10 @@ export function answer(query: string, data: PortfolioData): AgentReply {
 
   // Education
   if (has(tokens, "education", "study", "studied", "degree", "college", "university", "gpa", "graduate")) {
-    const e = data.education;
+    const e = data.education[0];
     return {
       text: e
-        ? `Rushi holds a ${e.degree} from ${e.institution} (${e.duration}), GPA ${e.gpa}.`
+        ? `Rushi holds a ${e.degree} from ${e.institution} (${e.duration}), ${e.gpa}.`
         : "Education details aren't loaded right now.",
       nodeIds: [ROOT],
       edgeIds: [],
@@ -186,13 +188,13 @@ export function answer(query: string, data: PortfolioData): AgentReply {
 
   // Experience
   if (has(tokens, "experience", "work", "job", "role", "company", "career", "promact", "employer")) {
-    const e = data.experience;
-    if (!e) return { text: "Experience details aren't loaded right now.", ...none };
+    if (!data.experience.length) return { text: "Experience details aren't loaded right now.", ...none };
+    const e = data.experience[0];
     const top = (e.achievements ?? []).slice(0, 2).join("; ");
     return {
       text: `Rushi is a ${e.role} at ${e.company} (${e.duration}). Highlights: ${top}.`,
-      nodeIds: [ROOT, NODE_EXP],
-      edgeIds: [edgeRootExp],
+      nodeIds: [ROOT, ...data.experience.map((_, i) => expId(i))],
+      edgeIds: data.experience.map((_, i) => edgeExp(i)),
     };
   }
 

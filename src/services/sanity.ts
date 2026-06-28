@@ -1,8 +1,8 @@
 import { createClient } from "@sanity/client";
 import { createImageUrlBuilder } from "@sanity/image-url";
 import {
-  fallbackEducation,
-  fallbackExperience,
+  fallbackEducations,
+  fallbackExperiences,
   fallbackProjects,
   fallbackSkills,
   fallbackArticles,
@@ -27,7 +27,7 @@ if (projectId) {
   sanityClient = createClient({
     projectId,
     dataset,
-    useCdn: true, // set to `false` to bypass the edge cache
+    useCdn: true, // edge cache for speed; self-invalidates a few minutes after each publish
     apiVersion: "2023-05-03", // use current date (YYYY-MM-DD) to target the latest API version
   });
   builder = createImageUrlBuilder(sanityClient);
@@ -44,28 +44,28 @@ export function urlFor(source: any) {
  * If the CMS is not configured (or fails), they return the fallbackData.
  */
 
-export const fetchEducation = async (): Promise<Education> => {
+export const fetchEducations = async (): Promise<Education[]> => {
   if (sanityClient) {
     try {
-      const data = await sanityClient.fetch(`*[_type == "education"][0]`);
-      if (data) return data;
+      const data = await sanityClient.fetch(`*[_type == "education"] | order(order asc)`);
+      if (data && data.length > 0) return data;
     } catch (e) {
       console.warn("Failed to fetch education from Sanity. Using fallback.", e);
     }
   }
-  return fallbackEducation;
+  return fallbackEducations;
 };
 
-export const fetchExperience = async (): Promise<ExperienceData> => {
+export const fetchExperiences = async (): Promise<ExperienceData[]> => {
   if (sanityClient) {
     try {
-      const data = await sanityClient.fetch(`*[_type == "experience"][0]`);
-      if (data) return data;
+      const data = await sanityClient.fetch(`*[_type == "experience"] | order(order asc)`);
+      if (data && data.length > 0) return data;
     } catch (e) {
       console.warn("Failed to fetch experience from Sanity. Using fallback.", e);
     }
   }
-  return fallbackExperience;
+  return fallbackExperiences;
 };
 
 export const fetchProjects = async (): Promise<Project[]> => {

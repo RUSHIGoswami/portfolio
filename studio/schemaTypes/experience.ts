@@ -19,6 +19,15 @@ export default defineType({
       type: "array",
       of: [{ type: "string" }],
     }),
+    defineField({
+      name: "order",
+      title: "Sort order (lower shows first)",
+      type: "number",
+      initialValue: 0,
+    }),
+  ],
+  orderings: [
+    { title: "Sort order", name: "orderAsc", by: [{ field: "order", direction: "asc" }] },
   ],
   preview: { select: { title: "role", subtitle: "company" } },
 });

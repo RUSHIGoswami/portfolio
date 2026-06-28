@@ -3,15 +3,18 @@ export interface Education {
   institution: string;
   duration: string;
   gpa: string;
+  order?: number;
 }
 
 export interface ExperienceData {
   company: string;
   role: string;
   duration: string;
+  location?: string;
   description: string;
   achievements: string[];
   responsibilities: string[];
+  order?: number;
 }
 
 export interface Project {
@@ -45,75 +48,120 @@ export interface ContactInfo {
   link: string;
 }
 
-export const fallbackEducation: Education = {
-  degree: "B.Tech in Computer Science",
-  institution: "Marwadi University",
-  duration: "2019-2023",
-  gpa: "8.9/10",
-};
+export const fallbackEducations: Education[] = [
+  {
+    degree: "B.Tech in Computer Science Engineering",
+    institution: "Marwadi University, Rajkot",
+    duration: "2019 - 2023",
+    gpa: "CGPA 8.9 / 10.0",
+    order: 0,
+  },
+  {
+    degree: "Higher Secondary Certificate (HSC)",
+    institution: "GSHEB Board, Surendranagar",
+    duration: "2018 - 2019",
+    gpa: "88%",
+    order: 1,
+  },
+  {
+    degree: "Secondary School Certificate (SSC)",
+    institution: "GSEB Board, Surendranagar",
+    duration: "2016 - 2017",
+    gpa: "89%",
+    order: 2,
+  },
+];
 
-export const fallbackExperience: ExperienceData = {
-  company: "Promact Infotech",
-  role: "Software Engineer",
-  duration: "January 2023 - Present",
-  description:
-    "Working as a Software Engineer specializing in AI/ML development.",
-  achievements: [
-    "Developed and deployed multiple ML models improving business efficiency by 40%",
-    "Implemented NLP solutions for automated text analysis and processing",
-    "Created custom AI solutions for client-specific requirements",
-    "Optimized existing ML pipelines reducing processing time by 30%",
-  ],
-  responsibilities: [
-    "Design and implement ML models for various business applications",
-    "Develop and maintain AI-powered software solutions",
-    "Collaborate with cross-functional teams for project delivery",
-    "Research and implement new AI/ML technologies",
-  ],
-};
+export const fallbackExperiences: ExperienceData[] = [
+  {
+    company: "Promact Infotech",
+    role: "AI Engineer",
+    duration: "Jan 2023 - Present",
+    location: "Vadodara, Gujarat",
+    description:
+      "Building production-grade Generative & Agentic AI — RAG pipelines, multi-agent orchestration, and Graph RAG across 8+ enterprise projects in construction, legal, sustainability, and sales.",
+    achievements: [
+      "Achieved 90%+ reduction in analysis time on the flagship construction analyser vs. manual processes.",
+      "Cut redundant LLM API calls by 60% through architecture-level prompt and pipeline optimization.",
+      "Recognized with the \"Fire Fighter\" and \"Ace of Initiatives\" awards.",
+      "Delivered 8+ enterprise AI projects end-to-end, from architecture through production.",
+    ],
+    responsibilities: [
+      "Own end-to-end delivery — system design, technical planning, and production validation.",
+      "Lead code reviews and mentor junior engineers on performance, security, and scalability.",
+      "Engineer prompts, guardrails, and output evaluation to meet enterprise-grade accuracy.",
+    ],
+    order: 0,
+  },
+];
 
 export const fallbackProjects: Project[] = [
   {
-    title: "AI based large construction project analyser",
+    title: "AI-Based Large Construction Project Analyser",
     description:
-      "Developed a production level micro-services architecture with multiple servers and lambdas to build construction project's operation and maintenance analysis, task generators, tender requirement extractions, tender bidding analysis and many more AI features.",
+      "Architected a production-grade micro-services AI platform digitizing the construction domain. Designed multi-stage RAG pipelines achieving a 90% reduction in analysis time vs. manual processes, with Graph RAG (Neo4j + KGLM), human-in-the-loop feedback, and async Azure Functions for scalable parallel document processing.",
     tools: [
       "Python",
       "FastAPI",
-      "Azure functions",
+      "Azure Functions",
       "Azure OpenAI",
-      "Langchain",
-      "Unstructured",
+      "LangChain",
+      "Graph RAG",
+      "Neo4j",
+    ],
+  },
+  {
+    title: "Bot Engine — Custom AI Chatbot Builder",
+    description:
+      "Led end-to-end system design of a multi-framework RAG chatbot builder, simultaneously implementing LangChain, LangGraph, and Microsoft Semantic Kernel. Integrated Anthropic Claude API, Azure OpenAI, and Azure AI Search for high-accuracy semantic search, with rigorous prompt testing, guardrails, and output evaluation for enterprise-grade accuracy.",
+    tools: [
+      "LangChain",
+      "LangGraph",
+      "Semantic Kernel",
+      "Anthropic Claude API",
+      "Azure OpenAI",
+      "Azure AI Search",
+    ],
+  },
+  {
+    title: "AI Sustainability Analyser & Multi-Agent System",
+    description:
+      "Architected an Agentic AI platform for SME sustainability compliance, featuring Double Materiality Analysis and multi-agent knowledge-graph chatbots over European regulatory directives. Built multi-agent RAG pipelines with Azure OpenAI tool calling and structured output, on an async Azure Functions micro-service architecture.",
+    tools: [
+      "Azure OpenAI",
+      "Multi-Agent",
+      "LlamaIndex",
+      "LlamaParse",
+      "Azure Document Intelligence",
       "Neo4j",
     ],
   },
   {
     title: "AI Legal Research Tool",
     description:
-      "Developed an AI application for legal professionals with legal search engine, judgment summaries, research book generation and many more AI features. Engineered batch systems with 5 different ML pipeline running parallel on spot instances and built NER system to extract and classify legal entities from large legal document corpus.",
+      "Transformed a weeks-long manual legal research process into an AI-driven workflow completing full analyses in minutes — covering legal search, judgment summarization, and acts & sections analysis. Engineered 5 ML batch pipelines running in parallel on AWS spot instances, trained a BiLSTM NER model from scratch, and set up Elasticsearch semantic search.",
     tools: [
-      "Flask",
       "Elasticsearch",
-      "OpenAI API",
-      "RAG",
-      "BiLSTM",
+      "BiLSTM NER",
+      "Azure ML",
+      "AWS Spot",
       "Selenium",
-      "Azure machine learning",
+      "RAG",
     ],
   },
   {
-    title: "AI Sales Agent",
+    title: "Dawat AI — LangGraph Multi-Agent System",
     description:
-      "Implemented an AI application that automates the entire sales process, from building rapport to converting leads. Utilized chat and instructive agents, reduced API calls by 60% through code refactoring resulting efficient and cost-effective way to manage CRMs and drive sales.",
-    tools: [
-      "FastAPI",
-      "Reactjs",
-      "ChromaDB",
-      "Agent Architectures",
-      "OpenAI API",
-      "Zapier",
-      "Salesforce - Apex",
-    ],
+      "Architected a smart culinary and dietary orchestration engine using LangGraph and role-based AI agents. Engineered complex routing logic to resolve intricate constraints, including specific nutritional diets and deep cultural food contexts.",
+    tools: ["LangGraph", "Role-based Agents", "Python"],
+    github: "https://github.com/rushigoswami",
+  },
+  {
+    title: "Financial Document Extractor — VLM PoC",
+    description:
+      "Built a proof-of-concept using open-source Vision Language Models to perform accurate Named Entity Recognition, automating extraction of structured entities from complex, unstructured financial documents and images.",
+    tools: ["Vision Language Models", "NER", "Python"],
+    github: "https://github.com/rushigoswami",
   },
 ];
 
@@ -123,82 +171,69 @@ export const fallbackSkills: SkillCategory[] = [
     iconName: "bot",
     skills: [
       "RAG",
-      "VectorDBs",
-      "Tool Calling",
-      "Fine Tuning",
-      "PEFT",
-      "Agents",
-      "LLMs (Llama, Mistral, Phi-mini, Reflection)",
-      "OpenAI API",
-      "Langchain",
+      "Graph-RAG (Neo4j)",
+      "Agentic AI",
+      "Agent Orchestrators",
+      "LangChain",
       "LangGraph",
-      "Langfuse",
       "LlamaIndex",
-      "HuggingFace tools",
-      "OpenRouter",
-      "LiteLLM",
-      "Cursor",
-      "Windsurf",
+      "Crew AI",
+      "HuggingFace",
+      "Prompt Engineering (CoT, Few-shot)",
     ],
   },
   {
-    title: "Languages",
-    iconName: "code",
-    skills: ["Python", "JavaScript", "C++"],
-  },
-  {
-    title: "Database",
-    iconName: "database",
-    skills: ["Postgres", "Azure Data Tables", "Neo4j - Graph DB"],
-  },
-  {
-    title: "Web Technologies",
-    iconName: "terminal",
-    skills: ["React", "Django", "FastAPI", "Flask", "Git/GitHub"],
-  },
-  {
-    title: "Machine Learning",
-    iconName: "microscope",
-    skills: [
-      "Pandas",
-      "Numpy",
-      "Scikit-learn",
-      "Matplotlib",
-      "Linear regression",
-      "Logistic Regression",
-      "Decision Tree",
-      "Random Forest",
-      "SVM",
-      "KNN",
-    ],
-  },
-  {
-    title: "Deep Learning & NLP",
+    title: "LLM Providers",
     iconName: "brain",
     skills: [
-      "Tensorflow",
-      "Pytorch",
-      "NLTK",
-      "Spacy",
-      "TF-IDF",
-      "Word2Vec",
-      "Bag of Words",
-      "RNNs",
-      "CNNs",
-      "LSTM",
-      "Yolo",
+      "OpenAI API",
+      "Anthropic API (Claude)",
+      "Gemini API",
+      "Azure OpenAI",
+      "OpenRouter",
     ],
   },
   {
-    title: "Cloud Services",
-    iconName: "cloud",
+    title: "Frameworks",
+    iconName: "terminal",
+    skills: ["FastAPI", "Flask", "Pydantic", "SQLAlchemy", "Alembic", "REST APIs"],
+  },
+  {
+    title: "Databases",
+    iconName: "database",
     skills: [
-      "Azure AI services",
-      "Azure Openai",
-      "Azure Speech",
-      "Azure AI search",
-      "Azure Machine Learning",
-      "Azure Document Intelligence",
+      "PostgreSQL",
+      "Elasticsearch",
+      "Neo4j",
+      "Azure Data Tables",
+      "ChromaDB",
+      "Milvus",
+      "Azure AI Search",
+    ],
+  },
+  {
+    title: "ML & NLP",
+    iconName: "microscope",
+    skills: ["Core ML Algorithms", "Fine-Tuning", "PEFT", "BiLSTM", "NER"],
+  },
+  {
+    title: "Observability",
+    iconName: "cloud",
+    skills: ["Langfuse", "LangSmith", "WandB Weave"],
+  },
+  {
+    title: "Tooling & Other",
+    iconName: "code",
+    skills: [
+      "Python",
+      "JavaScript",
+      "Selenium",
+      "MCP",
+      "Git",
+      "Jira",
+      "Cursor",
+      "Claude Code",
+      "NotebookLM",
     ],
   },
 ];
@@ -209,8 +244,9 @@ export const fallbackArticles: Article[] = [
     title: "Welcome to my new interactive portfolio",
     excerpt: "Building a node-based interactive resume using React Flow and Sanity CMS.",
     date: "2026-06-27",
-    content: "This is a placeholder article. In the future, I will write about my journey with GenAI, LangGraph, and other modern architectures here!",
-  }
+    content:
+      "This is a placeholder article. In the future, I will write about my journey with GenAI, LangGraph, and other modern architectures here!",
+  },
 ];
 
 export const fallbackContact: ContactInfo[] = [
@@ -223,8 +259,8 @@ export const fallbackContact: ContactInfo[] = [
   {
     iconName: "phone",
     label: "Phone",
-    value: "8140226399",
-    link: "tel:8140226399",
+    value: "+91 81402 26399",
+    link: "tel:+918140226399",
   },
   {
     iconName: "linkedin",

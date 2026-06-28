@@ -11,13 +11,14 @@ import {
   Node,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { ArrowLeft } from "lucide-react";
 import { CustomNode } from "./CustomNode";
 import { ChatPanel } from "./ChatPanel";
 import {
   fetchProjects,
   fetchSkills,
-  fetchExperience,
-  fetchEducation,
+  fetchExperiences,
+  fetchEducations,
   fetchArticles,
   fetchContact,
 } from "../services/sanity";
@@ -26,7 +27,11 @@ import { answer, buildGraph, PortfolioData } from "../services/agent";
 const EDGE_BASE = { stroke: "#232A38", strokeWidth: 1 };
 const EDGE_LIVE = { stroke: "#F2B24A", strokeWidth: 2 };
 
-const GraphLayout: React.FC = () => {
+interface GraphLayoutProps {
+  onBack: () => void;
+}
+
+const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [data, setData] = useState<PortfolioData | null>(null);
@@ -42,8 +47,8 @@ const GraphLayout: React.FC = () => {
       const [projects, skills, experience, education, articles, contact] = await Promise.all([
         fetchProjects(),
         fetchSkills(),
-        fetchExperience(),
-        fetchEducation(),
+        fetchExperiences(),
+        fetchEducations(),
         fetchArticles(),
         fetchContact(),
       ]);
@@ -90,6 +95,16 @@ const GraphLayout: React.FC = () => {
 
   return (
     <div className="w-full h-screen bg-ink relative">
+      {/* Back to the overview grid — the only nav in graph view. */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="absolute top-4 left-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-panel/80 backdrop-blur-md border border-line text-paper/90 hover:text-signal hover:border-signal/40 transition-colors shadow-xl"
+      >
+        <ArrowLeft size={16} />
+        <span className="font-mono text-xs tracking-wide">Back to overview</span>
+      </button>
+
       {/* Constrain the flow region so fitView never centres nodes under the chat panel. */}
       <div className="absolute inset-0 lg:right-88">
         <ReactFlow
