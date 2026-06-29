@@ -19,9 +19,9 @@ export default defineType({
     }),
     defineField({
       name: "skills",
+      title: "Skills",
       type: "array",
-      of: [{ type: "string" }],
-      options: { layout: "tags" },
+      of: [{ type: "reference", to: [{ type: "skill" }] }],
       validation: (r) => r.required().min(1),
     }),
     defineField({

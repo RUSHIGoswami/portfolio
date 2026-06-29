@@ -72,9 +72,15 @@ export const fetchProjects = async (): Promise<Project[]> => {
   if (sanityClient) {
     try {
       const data = await sanityClient.fetch(
-        `*[_type == "project"] | order(order asc){..., "imageUrl": image.asset->url}`
+        `*[_type == "project"] | order(order asc){
+          ...,
+          "imageUrl": image.asset->url,
+          "tools": tools[]->{ "id": _id, name }
+        }`
       );
-      if (data && data.length > 0) return data;
+      // Drop unresolved references (null) so the UI never sees a half-formed skill.
+      if (data && data.length > 0)
+        return data.map((p: Project) => ({ ...p, tools: (p.tools ?? []).filter(Boolean) }));
     } catch (e) {
       console.warn("Failed to fetch projects from Sanity. Using fallback.", e);
     }
@@ -85,8 +91,16 @@ export const fetchProjects = async (): Promise<Project[]> => {
 export const fetchSkills = async (): Promise<SkillCategory[]> => {
   if (sanityClient) {
     try {
-      const data = await sanityClient.fetch(`*[_type == "skillCategory"] | order(order asc)`);
-      if (data && data.length > 0) return data;
+      const data = await sanityClient.fetch(
+        `*[_type == "skillCategory"] | order(order asc){
+          title,
+          iconName,
+          order,
+          "skills": skills[]->{ "id": _id, name }
+        }`
+      );
+      if (data && data.length > 0)
+        return data.map((c: SkillCategory) => ({ ...c, skills: (c.skills ?? []).filter(Boolean) }));
     } catch (e) {
       console.warn("Failed to fetch skills from Sanity. Using fallback.", e);
     }

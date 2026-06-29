@@ -17,10 +17,20 @@ export interface ExperienceData {
   order?: number;
 }
 
+/**
+ * A skill is a first-class entity (its own Sanity document). Both skill
+ * categories and project tooling hold REFERENCES to skills — `id` is the
+ * primary key, so the same skill is one shared node everywhere it's used.
+ */
+export interface Skill {
+  id: string;
+  name: string;
+}
+
 export interface Project {
   title: string;
   description: string;
-  tools: string[];
+  tools: Skill[];
   link?: string;
   github?: string;
   imageUrl?: string;
@@ -29,8 +39,13 @@ export interface Project {
 export interface SkillCategory {
   title: string;
   iconName: string;
-  skills: string[];
+  skills: Skill[];
 }
+
+// Stable id from a name, so the same skill name dedupes to one entity in the
+// fallback data (mirrors how Sanity references share one _id).
+const skillSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+const sk = (name: string): Skill => ({ id: skillSlug(name), name });
 
 export interface Article {
   id: string;
@@ -95,7 +110,7 @@ export const fallbackExperiences: ExperienceData[] = [
   },
 ];
 
-export const fallbackProjects: Project[] = [
+const rawProjects: (Omit<Project, "tools"> & { tools: string[] })[] = [
   {
     title: "AI-Based Large Construction Project Analyser",
     description:
@@ -165,7 +180,7 @@ export const fallbackProjects: Project[] = [
   },
 ];
 
-export const fallbackSkills: SkillCategory[] = [
+const rawSkills: (Omit<SkillCategory, "skills"> & { skills: string[] })[] = [
   {
     title: "Generative AI",
     iconName: "bot",
@@ -237,6 +252,17 @@ export const fallbackSkills: SkillCategory[] = [
     ],
   },
 ];
+
+// Resolve the raw string lists into shared Skill entities.
+export const fallbackProjects: Project[] = rawProjects.map((p) => ({
+  ...p,
+  tools: p.tools.map(sk),
+}));
+
+export const fallbackSkills: SkillCategory[] = rawSkills.map((c) => ({
+  ...c,
+  skills: c.skills.map(sk),
+}));
 
 export const fallbackArticles: Article[] = [
   {

@@ -35,87 +35,139 @@ export interface AgentReply {
 const ROOT = "root";
 const HUB_SKILLS = "hub-skills";
 const HUB_PROJECTS = "hub-projects";
-const expId = (i: number) => `node-exp-${i}`;
 
-const skillId = (i: number) => `skill-${i}`;
+const catId = (i: number) => `cat-${i}`;
 const projId = (i: number) => `proj-${i}`;
+const expId = (i: number) => `exp-${i}`;
+const skillNodeId = (id: string) => `skill:${id}`;
 
 const edgeRootSkills = "e-root-skills";
 const edgeRootProjects = "e-root-projects";
 const edgeExp = (i: number) => `e-root-exp-${i}`;
-const edgeSkill = (i: number) => `e-skills-${i}`;
-const edgeProj = (i: number) => `e-projects-${i}`;
+const edgeCat = (i: number) => `e-skills-cat-${i}`;
+const edgeProjHub = (i: number) => `e-projects-proj-${i}`;
+const edgeCatSkill = (ci: number, id: string) => `e-cat-${ci}-${id}`;
+const edgeProjSkill = (pi: number, id: string) => `e-proj-${pi}-${id}`;
+
+interface SkillEntry {
+  id: string; // primary key (Sanity skill document _id)
+  label: string; // display name
+  real: boolean; // true = referenced by a skill category (curated), the source of truth
+  cats: Set<number>; // skill-category indices this skill appears under
+  projs: Set<number>; // project indices that reference this skill
+}
 
 /**
- * Lay the resume out as a radial knowledge graph: root in the centre, the
- * Skills and Projects hubs to either side, Experience below, and a fan of
- * leaves around each hub. Positions are derived from data length so the graph
- * stays balanced whatever the CMS returns.
+ * The skill graph is now a true relational model. Skills are first-class entities
+ * (Sanity documents); both skill categories and project tooling hold REFERENCES to
+ * them. We index by the skill's primary key (`id`), so a skill used by a category
+ * and three projects is ONE shared node — referential integrity is enforced
+ * upstream by Sanity, not by fuzzy name matching.
+ *   - `real:true`  → referenced by at least one skill category (curated taxonomy).
+ *   - `real:false` → referenced only by projects (a tool not in the curated taxonomy).
+ */
+function indexSkills(data: PortfolioData): Map<string, SkillEntry> {
+  const skills = new Map<string, SkillEntry>();
+
+  const upsert = (id: string, name: string) => {
+    if (!skills.has(id)) skills.set(id, { id, label: name, real: false, cats: new Set(), projs: new Set() });
+    const e = skills.get(id)!;
+    if (name) e.label = name;
+    return e;
+  };
+
+  // 1. Curated skills — referenced by categories (source of truth).
+  data.skills.forEach((cat, ci) =>
+    (cat.skills ?? []).forEach((s) => {
+      if (!s?.id) return;
+      const e = upsert(s.id, s.name);
+      e.real = true;
+      e.cats.add(ci);
+    })
+  );
+
+  // 2. Project tools — foreign keys onto the same skill entities.
+  data.projects.forEach((p, pi) =>
+    (p.tools ?? []).forEach((t) => {
+      if (!t?.id) return;
+      upsert(t.id, t.name).projs.add(pi);
+    })
+  );
+
+  return skills;
+}
+
+/**
+ * Build the resume knowledge graph. Hierarchy:
+ *   root → Skills hub → category → individual skill
+ *   root → Projects hub → project → tool (REUSES the same skill node when shared)
+ *   root → experience
+ * Positions are placeholders — the force simulation lays everything out at runtime.
  */
 export function buildGraph(data: PortfolioData): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
+  const P = { x: 0, y: 0 };
 
   nodes.push({
     id: ROOT,
     type: "custom",
-    position: { x: 0, y: 0 },
+    position: P,
     data: { label: "Rushi Goswami", sublabel: "AI/ML Engineer", kind: "root" },
   });
 
-  // Skills hub + leaves (fan to the upper-left).
-  nodes.push({
-    id: HUB_SKILLS,
-    type: "custom",
-    position: { x: -340, y: -120 },
-    data: { label: "Skills", kind: "hub" },
-  });
+  nodes.push({ id: HUB_SKILLS, type: "custom", position: P, data: { label: "Skills", kind: "hub" } });
+  nodes.push({ id: HUB_PROJECTS, type: "custom", position: P, data: { label: "Projects", kind: "hub" } });
   edges.push({ id: edgeRootSkills, source: ROOT, target: HUB_SKILLS });
-  data.skills.forEach((cat, i) => {
-    const t = data.skills.length > 1 ? i / (data.skills.length - 1) : 0.5;
-    const angle = Math.PI * (0.95 + t * 0.7); // sweep across the left side
-    nodes.push({
-      id: skillId(i),
-      type: "custom",
-      position: { x: -340 + Math.cos(angle) * 260, y: -120 + Math.sin(angle) * 260 },
-      data: { label: cat.title, kind: "leaf" },
-    });
-    edges.push({ id: edgeSkill(i), source: HUB_SKILLS, target: skillId(i) });
-  });
-
-  // Projects hub + leaves (fan to the upper-right).
-  nodes.push({
-    id: HUB_PROJECTS,
-    type: "custom",
-    position: { x: 340, y: -120 },
-    data: { label: "Projects", kind: "hub" },
-  });
   edges.push({ id: edgeRootProjects, source: ROOT, target: HUB_PROJECTS });
-  data.projects.forEach((proj, i) => {
-    const t = data.projects.length > 1 ? i / (data.projects.length - 1) : 0.5;
-    const angle = Math.PI * (0.05 + t * 0.7) * -1; // sweep across the right side
+
+  const skills = indexSkills(data);
+
+  // One node per distinct skill (shared across categories + projects). `real`
+  // distinguishes a curated skill from a project-only tool reference.
+  skills.forEach((entry, id) => {
     nodes.push({
-      id: projId(i),
+      id: skillNodeId(id),
       type: "custom",
-      position: { x: 340 + Math.cos(angle) * 280, y: -120 + Math.sin(angle) * 280 },
-      data: { label: proj.title, kind: "leaf" },
+      position: P,
+      data: { label: entry.label, kind: "leaf", real: entry.real },
     });
-    edges.push({ id: edgeProj(i), source: HUB_PROJECTS, target: projId(i) });
   });
 
-  // Experience nodes (fan out below root).
+  // Categories + their skill edges.
+  data.skills.forEach((cat, ci) => {
+    nodes.push({ id: catId(ci), type: "custom", position: P, data: { label: cat.title, kind: "hub" } });
+    edges.push({ id: edgeCat(ci), source: HUB_SKILLS, target: catId(ci) });
+  });
+
+  // Projects + their tool edges (reusing shared skill nodes).
+  data.projects.forEach((proj, pi) => {
+    nodes.push({
+      id: projId(pi),
+      type: "custom",
+      position: P,
+      data: { label: proj.title, kind: "hub", img: proj.imageUrl },
+    });
+    edges.push({ id: edgeProjHub(pi), source: HUB_PROJECTS, target: projId(pi) });
+  });
+
+  // Wire every skill to its categories and projects.
+  skills.forEach((entry, id) => {
+    entry.cats.forEach((ci) =>
+      edges.push({ id: edgeCatSkill(ci, id), source: catId(ci), target: skillNodeId(id) })
+    );
+    entry.projs.forEach((pi) =>
+      edges.push({ id: edgeProjSkill(pi, id), source: projId(pi), target: skillNodeId(id) })
+    );
+  });
+
+  // Experience nodes hang directly off root.
   data.experience.forEach((exp, i) => {
-    const n = data.experience.length;
-    const spread = (i - (n - 1) / 2) * 320;
     nodes.push({
       id: expId(i),
       type: "custom",
-      position: { x: spread, y: 320 },
-      data: {
-        label: exp.role,
-        sublabel: exp.company,
-        kind: "hub",
-      },
+      position: P,
+      data: { label: exp.role, sublabel: exp.company, kind: "hub" },
     });
     edges.push({ id: edgeExp(i), source: ROOT, target: expId(i) });
   });
@@ -124,11 +176,22 @@ export function buildGraph(data: PortfolioData): { nodes: Node[]; edges: Edge[] 
 }
 
 // ---- Retrieval helpers ----
+// Common English words that would otherwise substring-match real content
+// ("do" → "Document", "you" → greeting "yo", etc.).
+const STOPWORDS = new Set([
+  "what", "which", "who", "whom", "how", "do", "does", "did", "you", "your", "yours",
+  "have", "has", "had", "the", "and", "for", "are", "can", "could", "would", "should",
+  "with", "about", "tell", "give", "show", "list", "any", "all", "use", "used", "using",
+  "his", "him", "her", "she", "they", "this", "that", "these", "those", "from", "into",
+  "out", "get", "got", "want", "need", "know", "see", "let",
+]);
 const tokenize = (q: string) =>
-  q.toLowerCase().match(/[a-z0-9+#.]+/g)?.filter((t) => t.length >= 2) ?? [];
+  q
+    .toLowerCase()
+    .match(/[a-z0-9+#.]+/g)
+    ?.filter((t) => t.length >= 2 && !STOPWORDS.has(t)) ?? [];
 
-const hits = (token: string, haystack: string) =>
-  haystack.toLowerCase().includes(token);
+const hits = (token: string, haystack: string) => haystack.toLowerCase().includes(token);
 
 const has = (tokens: string[], ...words: string[]) =>
   tokens.some((t) => words.some((w) => t === w || t.includes(w)));
@@ -153,8 +216,9 @@ export function answer(query: string, data: PortfolioData): AgentReply {
     return { text: "Ask me about Rushi's projects, skills, experience, or how to reach him.", ...none };
   }
 
-  // Greeting
-  if (has(tokens, "hi", "hello", "hey", "yo", "sup", "greetings")) {
+  // Greeting — exact-token match only, so "you" doesn't trip "yo" etc.
+  const GREETINGS = ["hi", "hello", "hey", "yo", "sup", "greetings", "howdy"];
+  if (tokens.some((t) => GREETINGS.includes(t))) {
     return {
       text: "Hi! I'm Rushi's resume agent. Ask about his projects, skills, experience, or contact details — the graph will light up the relevant nodes.",
       nodeIds: [ROOT],
@@ -198,44 +262,73 @@ export function answer(query: string, data: PortfolioData): AgentReply {
     };
   }
 
-  // Tech-term search across skills + project tooling.
-  const matchedSkills: number[] = [];
-  data.skills.forEach((cat, i) => {
-    const blob = `${cat.title ?? ""} ${(cat.skills ?? []).join(" ")}`;
-    if (tokens.some((t) => hits(t, blob))) matchedSkills.push(i);
+  const skills = indexSkills(data);
+
+  // Match individual skills by name. A matched skill lights its own node plus
+  // every category and project it connects to — the cross-links become visible.
+  const matchedSkillIds: string[] = [];
+  skills.forEach((entry, id) => {
+    if (tokens.some((t) => hits(t, entry.label))) matchedSkillIds.push(id);
   });
 
+  // Match projects by title / description text too.
   const matchedProjects: number[] = [];
   data.projects.forEach((proj, i) => {
-    const blob = `${proj.title ?? ""} ${proj.description ?? ""} ${(proj.tools ?? []).join(" ")}`;
+    const blob = `${proj.title ?? ""} ${proj.description ?? ""}`;
     if (tokens.some((t) => hits(t, blob))) matchedProjects.push(i);
   });
 
   const wantsAllProjects = has(tokens, "project", "projects", "built", "build", "portfolio");
   const wantsAllSkills = has(tokens, "skill", "skills", "tech", "stack", "technology", "tools");
 
-  if (matchedSkills.length || matchedProjects.length) {
-    const nodeIds = [ROOT];
-    const edgeIds: string[] = [];
-    const parts: string[] = [];
+  if (matchedSkillIds.length || matchedProjects.length) {
+    const nodeIds = new Set<string>([ROOT]);
+    const edgeIds = new Set<string>();
+    const catHit = new Set<number>();
+    const projHit = new Set<number>(matchedProjects);
+    const skillLabels: string[] = [];
 
-    if (matchedProjects.length) {
-      nodeIds.push(HUB_PROJECTS, ...matchedProjects.map(projId));
-      edgeIds.push(edgeRootProjects, ...matchedProjects.map(edgeProj));
-      const titles = matchedProjects.map((i) => data.projects[i].title);
-      parts.push(`it shows up in ${listJoin(titles)}`);
+    for (const id of matchedSkillIds) {
+      const entry = skills.get(id)!;
+      skillLabels.push(entry.label);
+      nodeIds.add(skillNodeId(id));
+      entry.cats.forEach((ci) => {
+        catHit.add(ci);
+        nodeIds.add(catId(ci));
+        edgeIds.add(edgeCatSkill(ci, id));
+      });
+      entry.projs.forEach((pi) => {
+        projHit.add(pi);
+        nodeIds.add(projId(pi));
+        edgeIds.add(edgeProjSkill(pi, id));
+      });
     }
-    if (matchedSkills.length) {
-      nodeIds.push(HUB_SKILLS, ...matchedSkills.map(skillId));
-      edgeIds.push(edgeRootSkills, ...matchedSkills.map(edgeSkill));
-      const cats = matchedSkills.map((i) => data.skills[i].title);
-      parts.push(`it sits under ${listJoin(cats)}`);
+
+    if (catHit.size) {
+      nodeIds.add(HUB_SKILLS);
+      edgeIds.add(edgeRootSkills);
+      catHit.forEach((ci) => edgeIds.add(edgeCat(ci)));
+    }
+    if (projHit.size) {
+      nodeIds.add(HUB_PROJECTS);
+      edgeIds.add(edgeRootProjects);
+      projHit.forEach((pi) => {
+        nodeIds.add(projId(pi));
+        edgeIds.add(edgeProjHub(pi));
+      });
+    }
+
+    const parts: string[] = [];
+    if (skillLabels.length) parts.push(`it maps to ${listJoin(unique(skillLabels))}`);
+    if (projHit.size) {
+      const titles = [...projHit].map((i) => data.projects[i].title);
+      parts.push(`it shows up in ${listJoin(titles)}`);
     }
 
     return {
-      text: `Good question — ${parts.join(", and ")}. Highlighted nodes show the connections.`,
-      nodeIds,
-      edgeIds,
+      text: `Good question — ${parts.join(", and ")}. The highlighted nodes trace the connections.`,
+      nodeIds: [...nodeIds],
+      edgeIds: [...edgeIds],
     };
   }
 
@@ -245,15 +338,15 @@ export function answer(query: string, data: PortfolioData): AgentReply {
         data.projects.map((p) => p.title)
       )}.`,
       nodeIds: [ROOT, HUB_PROJECTS, ...data.projects.map((_, i) => projId(i))],
-      edgeIds: [edgeRootProjects, ...data.projects.map((_, i) => edgeProj(i))],
+      edgeIds: [edgeRootProjects, ...data.projects.map((_, i) => edgeProjHub(i))],
     };
   }
 
   if (wantsAllSkills) {
     return {
       text: `His skills span ${listJoin(data.skills.map((s) => s.title))}. Ask about any one to see where it's used.`,
-      nodeIds: [ROOT, HUB_SKILLS, ...data.skills.map((_, i) => skillId(i))],
-      edgeIds: [edgeRootSkills, ...data.skills.map((_, i) => edgeSkill(i))],
+      nodeIds: [ROOT, HUB_SKILLS, ...data.skills.map((_, i) => catId(i))],
+      edgeIds: [edgeRootSkills, ...data.skills.map((_, i) => edgeCat(i))],
     };
   }
 
@@ -262,6 +355,10 @@ export function answer(query: string, data: PortfolioData): AgentReply {
     nodeIds: [ROOT],
     edgeIds: [],
   };
+}
+
+function unique(items: string[]): string[] {
+  return [...new Set(items)];
 }
 
 function listJoin(items: string[]): string {
