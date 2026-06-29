@@ -1,6 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@config '../tailwind.config.js';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
 
 :root {
   color-scheme: dark;
@@ -8,16 +26,39 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 80px; /* This accounts for the fixed navbar */
+  scroll-padding-top: 80px; /* accounts for the fixed navbar */
 }
 
 body {
-  @apply bg-black text-white min-h-screen;
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  @apply bg-ink text-paper min-h-screen font-display antialiased;
+}
+
+/* Faint engineering-paper grid — the schematic substrate the whole site sits on. */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(35, 42, 56, 0.4) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(35, 42, 56, 0.4) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 .bg-dot-pattern {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-  background-size: 40px 40px;
-  background-position: -19px -19px;
+  background-image: radial-gradient(rgba(139, 147, 164, 0.18) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -16px -16px;
+}
+
+/* Monospace "instrument readout" label used for eyebrows and node IDs. */
+.readout {
+  @apply font-mono text-[11px] uppercase tracking-[0.2em] text-muted;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -9,6 +9,7 @@ A modern, responsive portfolio website built with React and Vite.
 - Tailwind CSS
 - Framer Motion
 - React Router DOM
+- Sanity CMS
 
 ## Setup and Installation
 
@@ -30,4 +31,4 @@ A modern, responsive portfolio website built with React and Vite.
 
 This project is configured for GitHub Pages deployment on the main branch.
 
-Note: Entirely generated using AI - Codeium (Windsurf)
+Note: Entirely generated using AI - Codeium (Windsurf) + Claude Code

@@ -1,0 +1,22 @@
+{
+  "name": "portfolio-studio",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sanity Studio — no-code admin UI for the portfolio content.",
+  "scripts": {
+    "dev": "sanity dev",
+    "start": "sanity start",
+    "build": "sanity build",
+    "deploy": "sanity deploy"
+  },
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "sanity": "^6.2.0",
+    "styled-components": "^6.4.3"
+  },
+  "devDependencies": {
+    "@sanity/vision": "^6.2.0",
+    "typescript": "^6.0.3"
+  }
+}
