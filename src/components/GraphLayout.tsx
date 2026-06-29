@@ -6,7 +6,17 @@ import React, {
   useState,
 } from "react";
 import ForceGraph2D, { ForceGraphMethods } from "react-force-graph-2d";
-import { ArrowLeft, Plus, Minus, Maximize2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  ArrowLeft,
+  Plus,
+  Minus,
+  Maximize2,
+  MessageSquare,
+  X,
+  ExternalLink,
+} from "lucide-react";
+import { Github } from "./BrandIcons";
 import { ChatPanel } from "./ChatPanel";
 import {
   fetchProjects,
@@ -16,7 +26,12 @@ import {
   fetchArticles,
   fetchContact,
 } from "../services/sanity";
-import { answer, buildGraph, PortfolioData } from "../services/agent";
+import {
+  answer,
+  buildGraph,
+  PortfolioData,
+  NodeMeta,
+} from "../services/agent";
 
 // ---- Palette (mirrors tailwind.config.js) ----
 const C = {
@@ -51,9 +66,13 @@ interface GNode {
   img?: string;
   imgFocus?: ImgFocus;
   real?: boolean; // for leaf skills: true = curated skill, false = project-only tool
+  meta?: NodeMeta; // surfaced in the click-to-inspect card
   // mutated by the force simulation:
   x?: number;
   y?: number;
+  // set to pin a node in place (after the user drags it):
+  fx?: number;
+  fy?: number;
 }
 
 interface GLink {
@@ -69,6 +88,53 @@ interface GraphLayoutProps {
 // Radius (graph units) by hierarchy. Root is deliberately dominant.
 const RADIUS: Record<Kind, number> = { root: 38, hub: 15, leaf: 9 };
 
+// Extra clearance (graph units) reserved around each node for its label pill so
+// neighbours never overlap the text — root keeps the most room.
+const LABEL_PAD: Record<Kind, number> = { root: 26, hub: 30, leaf: 16 };
+
+// Custom collision force: keeps node circles + their labels from overlapping.
+// Written inline so we don't depend on a top-level d3-force install (it's only
+// bundled transitively inside react-force-graph).
+function makeCollideForce() {
+  let nodes: GNode[] = [];
+  const force = (alpha: number) => {
+    for (let i = 0; i < nodes.length; i++) {
+      const a = nodes[i];
+      const ra = RADIUS[a.kind] + LABEL_PAD[a.kind];
+      for (let j = i + 1; j < nodes.length; j++) {
+        const b = nodes[j];
+        const rb = RADIUS[b.kind] + LABEL_PAD[b.kind];
+        const min = ra + rb;
+        let dx = (b.x ?? 0) - (a.x ?? 0);
+        let dy = (b.y ?? 0) - (a.y ?? 0);
+        let dist = Math.hypot(dx, dy);
+        if (dist === 0) {
+          dist = 1;
+          dx = (i % 2 === 0 ? 1 : -1) * 0.5;
+          dy = 0.5;
+        }
+        if (dist < min) {
+          const shift = ((min - dist) / dist) * alpha * 0.6;
+          const px = dx * shift;
+          const py = dy * shift;
+          const av = a as GNode & { vx?: number; vy?: number };
+          const bv = b as GNode & { vx?: number; vy?: number };
+          bv.vx = (bv.vx ?? 0) + px;
+          bv.vy = (bv.vy ?? 0) + py;
+          av.vx = (av.vx ?? 0) - px;
+          av.vy = (av.vy ?? 0) - py;
+        }
+      }
+    }
+  };
+  (force as unknown as { initialize: (n: GNode[]) => void }).initialize = (
+    n: GNode[],
+  ) => {
+    nodes = n;
+  };
+  return force;
+}
+
 const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
   const fgRef = useRef<ForceGraphMethods<GNode, GLink> | undefined>(undefined);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -79,6 +145,11 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
   );
   const [isTyping, setIsTyping] = useState(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  const [selected, setSelected] = useState<GNode | null>(null);
+  // Chat starts open on wide screens, collapsed on phones so the graph is visible.
+  const [chatOpen, setChatOpen] = useState(
+    () => typeof window === "undefined" || window.innerWidth >= 1024,
+  );
 
   // Persistent master graph — built once. Node objects are reused across
   // expand/collapse so the simulation keeps their positions. Skill nodes are
@@ -159,6 +230,7 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
           sublabel?: string;
           img?: string;
           real?: boolean;
+          meta?: NodeMeta;
         };
         nodesById.set(n.id, {
           id: n.id,
@@ -168,6 +240,7 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
           img: n.id === ROOT ? ROOT_IMG : d?.img,
           imgFocus: n.id === ROOT ? ROOT_FOCUS : undefined,
           real: d?.real,
+          meta: d?.meta,
         });
       });
 
@@ -230,18 +303,30 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
     if (!graphReady) return;
     const fg = fgRef.current;
     if (!fg) return;
-    fg.d3Force("charge")?.strength(-240);
+    fg.d3Force("charge")?.strength(-520);
     const link = fg.d3Force("link") as unknown as
-      | { distance?: (d: number) => void }
+      | { distance?: (fn: (l: GLink) => number) => void }
       | undefined;
-    link?.distance?.(70);
+    // Distance scales with the connected nodes' sizes: links touching the big
+    // root push their hub far enough out that nothing crowds the face.
+    link?.distance?.((l: GLink) => {
+      const ends = [l.source, l.target] as unknown as (GNode | string)[];
+      const kinds = ends.map(e =>
+        typeof e === "object" ? (e as GNode).kind : "leaf",
+      );
+      if (kinds.includes("root")) return 150;
+      if (kinds.includes("hub")) return 64;
+      return 48;
+    });
+    // Collision keeps circles + labels from overlapping at rest.
+    fg.d3Force("collide", makeCollideForce() as never);
     fg.d3ReheatSimulation();
-    const t = setTimeout(() => fg.zoomToFit(500, 80), 400);
+    const t = setTimeout(() => fg.zoomToFit(600, 90), 450);
     return () => clearTimeout(t);
   }, [graphReady]);
 
-  // ---- Expand/collapse on click ----
-  const handleNodeClick = useCallback((node: GNode) => {
+  // ---- Expand/collapse a node's subtree (double-click) ----
+  const toggleExpand = useCallback((node: GNode) => {
     if (!hasChildren(node.id)) {
       if (node.x != null && node.y != null)
         fgRef.current?.centerAt(node.x, node.y, 400);
@@ -270,6 +355,42 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ---- Distinguish single-click (inspect card) from double-click (expand).
+  // react-force-graph fires onNodeClick per click; we debounce to detect a pair.
+  const clickTimer = useRef<number | null>(null);
+  const chatWasOpen = useRef(false);
+  const handleNodeClick = useCallback(
+    (node: GNode) => {
+      if (clickTimer.current != null) {
+        window.clearTimeout(clickTimer.current);
+        clickTimer.current = null;
+        toggleExpand(node);
+        return;
+      }
+      clickTimer.current = window.setTimeout(() => {
+        clickTimer.current = null;
+        // The card takes the chat's slot — remember chat state so we can restore it.
+        chatWasOpen.current = chatOpen;
+        setChatOpen(false);
+        setSelected(node);
+        if (node.x != null && node.y != null)
+          fgRef.current?.centerAt(node.x, node.y, 400);
+      }, 230);
+    },
+    [toggleExpand, chatOpen],
+  );
+
+  // Pin a node where the user drops it so it stays put instead of snapping back.
+  const handleNodeDragEnd = useCallback((node: GNode) => {
+    node.fx = node.x;
+    node.fy = node.y;
+  }, []);
+
+  const closeCard = () => {
+    setSelected(null);
+    if (chatWasOpen.current) setChatOpen(true);
+  };
+
   // ---- Agent highlight: reveal lit nodes (expand all ancestors), ignite wires ----
   const highlight = (nodeIds: string[], edgeIds: string[]) => {
     setExpanded(prev => {
@@ -294,6 +415,13 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
     setIgLinks(new Set(edgeIds));
     fgRef.current?.d3ReheatSimulation();
     setTimeout(() => fgRef.current?.zoomToFit(600, 90), 350);
+  };
+
+  const clearChat = () => {
+    setMessages([]);
+    setIsTyping(false);
+    setIgnited(new Set());
+    setIgLinks(new Set());
   };
 
   const handleSendMessage = (msg: string) => {
@@ -502,7 +630,7 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
 
       <div
         ref={wrapRef}
-        className="absolute inset-0 lg:right-88 bg-ink bg-dot-white bg-dot-pattern [background-blend-mode:soft-light]"
+        className={`absolute inset-0 ${chatOpen ? "lg:right-88" : ""} bg-ink bg-dot-white bg-dot-pattern [background-blend-mode:soft-light] transition-[right] duration-300`}
         style={{ backgroundColor: C.ink }}
       >
         {size.w > 0 && (
@@ -517,6 +645,7 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
             nodeCanvasObject={paintNode}
             nodePointerAreaPaint={paintPointerArea}
             onNodeClick={handleNodeClick}
+            onNodeDragEnd={handleNodeDragEnd}
             linkColor={linkColor}
             linkWidth={linkWidth}
             linkDirectionalParticles={linkParticles}
@@ -530,12 +659,133 @@ const GraphLayout: React.FC<GraphLayoutProps> = ({ onBack }) => {
         )}
       </div>
 
-      <ChatPanel
-        onSendMessage={handleSendMessage}
-        messages={messages}
-        isTyping={isTyping}
-      />
+      <AnimatePresence>
+        {chatOpen && (
+          <ChatPanel
+            onSendMessage={handleSendMessage}
+            messages={messages}
+            isTyping={isTyping}
+            onClear={clearChat}
+            onCollapse={() => setChatOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Floating button to reopen the chat when collapsed */}
+      <AnimatePresence>
+        {!chatOpen && !selected && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => setChatOpen(true)}
+            aria-label="Open resume agent"
+            className="absolute bottom-6 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full bg-signal text-ink font-medium shadow-2xl hover:bg-signal/90 transition-colors"
+          >
+            <MessageSquare size={18} />
+            <span className="font-mono text-xs tracking-wide">Ask agent</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      <NodeCard node={selected} onClose={closeCard} />
     </div>
+  );
+};
+
+// ---- Click-to-inspect card: shows a node's description + metadata ----
+const NodeCard: React.FC<{ node: GNode | null; onClose: () => void }> = ({
+  node,
+  onClose,
+}) => {
+  const meta = node?.meta;
+  return (
+    <AnimatePresence>
+      {node && (
+        <motion.div
+          key={node.id}
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 24 }}
+          transition={{ type: "spring", damping: 28, stiffness: 320 }}
+          className="absolute top-20 right-2 sm:right-4 w-84 max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-120px)] bg-panel/95 backdrop-blur-md border border-line rounded-2xl shadow-2xl z-30 flex flex-col overflow-hidden"
+        >
+          <div className="flex items-start justify-between gap-3 p-4 border-b border-line">
+            <div className="min-w-0">
+              <h3 className="font-display font-semibold text-paper leading-tight truncate">
+                {node.label}
+              </h3>
+              {meta?.sublabel && (
+                <span className="font-mono text-[11px] text-signal/90">
+                  {meta.sublabel}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="shrink-0 p-1.5 bg-panel2 hover:bg-line text-paper/80 rounded-full transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {meta?.description && (
+              <p className="text-sm text-paper/80 leading-relaxed">
+                {meta.description}
+              </p>
+            )}
+
+            {!!meta?.tags?.length && (
+              <div className="flex flex-wrap gap-1.5">
+                {meta.tags.map((t, i) => (
+                  <span
+                    key={`${t}-${i}`}
+                    className="font-mono text-[10px] px-2 py-0.5 bg-signal/10 text-signal rounded-sm border border-signal/20"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {(meta?.link || meta?.github) && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {meta.link && (
+                  <a
+                    href={meta.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-signal/15 text-signal border border-signal/30 hover:bg-signal/25 transition-colors text-xs font-medium"
+                  >
+                    <ExternalLink size={14} /> Live
+                  </a>
+                )}
+                {meta.github && (
+                  <a
+                    href={meta.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-panel2 text-paper/85 border border-line hover:border-signal/40 transition-colors text-xs font-medium"
+                  >
+                    <Github size={14} /> GitHub
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="px-4 py-2.5 border-t border-line bg-panel2/50">
+            <p className="font-mono text-[10px] text-muted">
+              double-click the node to expand · single-click to inspect
+            </p>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

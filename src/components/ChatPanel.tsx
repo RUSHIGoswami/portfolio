@@ -1,14 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Send, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { Send, Sparkles, Trash2, ChevronRight } from "lucide-react";
 import { SUGGESTIONS } from "../services/agent";
 
 interface ChatPanelProps {
   onSendMessage: (msg: string) => void;
   messages: { text: string; isUser: boolean }[];
   isTyping?: boolean;
+  onClear?: () => void;
+  onCollapse?: () => void;
 }
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ onSendMessage, messages, isTyping = false }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({
+  onSendMessage,
+  messages,
+  isTyping = false,
+  onClear,
+  onCollapse,
+}) => {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -25,14 +34,43 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ onSendMessage, messages, i
   };
 
   return (
-    <div className="absolute top-20 right-4 w-84 max-w-[calc(100vw-2rem)] h-[calc(100vh-120px)] bg-panel/85 backdrop-blur-md border border-line rounded-2xl flex flex-col shadow-2xl z-10 overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 24 }}
+      transition={{ type: "spring", damping: 28, stiffness: 320 }}
+      className="absolute top-20 right-2 sm:right-4 w-84 max-w-[calc(100vw-1rem)] h-[calc(100dvh-120px)] bg-panel/90 backdrop-blur-md border border-line rounded-2xl flex flex-col shadow-2xl z-30 overflow-hidden"
+    >
       {/* Header */}
       <div className="px-4 py-3 border-b border-line bg-panel2/60 flex items-center gap-2.5">
-        <Sparkles size={16} className="text-signal" />
-        <div>
+        <Sparkles size={16} className="text-signal shrink-0" />
+        <div className="min-w-0 flex-1">
           <h3 className="font-display font-semibold text-paper text-sm leading-none">Resume Agent</h3>
           <span className="font-mono text-[10px] text-muted">local · grounded in real data</span>
         </div>
+        {onClear && (
+          <button
+            type="button"
+            onClick={onClear}
+            disabled={messages.length === 0}
+            aria-label="Clear chat"
+            title="Clear chat"
+            className="shrink-0 p-1.5 rounded-md text-paper/70 hover:text-signal hover:bg-line/60 disabled:opacity-30 disabled:hover:text-paper/70 disabled:hover:bg-transparent transition-colors"
+          >
+            <Trash2 size={15} />
+          </button>
+        )}
+        {onCollapse && (
+          <button
+            type="button"
+            onClick={onCollapse}
+            aria-label="Collapse chat"
+            title="Collapse chat"
+            className="shrink-0 p-1.5 rounded-md text-paper/70 hover:text-signal hover:bg-line/60 transition-colors"
+          >
+            <ChevronRight size={16} />
+          </button>
+        )}
       </div>
 
       {/* Chat Area */}
@@ -100,6 +138,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ onSendMessage, messages, i
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

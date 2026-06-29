@@ -31,6 +31,24 @@ export interface AgentReply {
   edgeIds: string[];
 }
 
+// ---- Per-node metadata, surfaced in the graph's click-to-inspect card ----
+export type NodeMetaType =
+  | "root"
+  | "hub"
+  | "category"
+  | "project"
+  | "experience"
+  | "skill";
+
+export interface NodeMeta {
+  type: NodeMetaType;
+  description?: string;
+  tags?: string[];
+  link?: string;
+  github?: string;
+  sublabel?: string;
+}
+
 // ---- Stable node IDs (shared by the graph builder and the agent) ----
 const ROOT = "root";
 const HUB_SKILLS = "hub-skills";
@@ -113,11 +131,48 @@ export function buildGraph(data: PortfolioData): { nodes: Node[]; edges: Edge[] 
     id: ROOT,
     type: "custom",
     position: P,
-    data: { label: "Rushi Goswami", sublabel: "AI/ML Engineer", kind: "root" },
+    data: {
+      label: "Rushi Goswami",
+      sublabel: "AI/ML Engineer",
+      kind: "root",
+      meta: {
+        type: "root",
+        sublabel: "AI/ML Engineer",
+        description:
+          "AI Engineer building production RAG pipelines, multi-agent systems, and Graph RAG with Generative AI.",
+        tags: data.contact.map((c) => c.label).filter(Boolean),
+      } as NodeMeta,
+    },
   });
 
-  nodes.push({ id: HUB_SKILLS, type: "custom", position: P, data: { label: "Skills", kind: "hub" } });
-  nodes.push({ id: HUB_PROJECTS, type: "custom", position: P, data: { label: "Projects", kind: "hub" } });
+  nodes.push({
+    id: HUB_SKILLS,
+    type: "custom",
+    position: P,
+    data: {
+      label: "Skills",
+      kind: "hub",
+      meta: {
+        type: "hub",
+        description: `${data.skills.length} skill categories spanning the stack.`,
+        tags: data.skills.map((s) => s.title),
+      } as NodeMeta,
+    },
+  });
+  nodes.push({
+    id: HUB_PROJECTS,
+    type: "custom",
+    position: P,
+    data: {
+      label: "Projects",
+      kind: "hub",
+      meta: {
+        type: "hub",
+        description: `${data.projects.length} flagship projects.`,
+        tags: data.projects.map((p) => p.title),
+      } as NodeMeta,
+    },
+  });
   edges.push({ id: edgeRootSkills, source: ROOT, target: HUB_SKILLS });
   edges.push({ id: edgeRootProjects, source: ROOT, target: HUB_PROJECTS });
 
@@ -126,17 +181,46 @@ export function buildGraph(data: PortfolioData): { nodes: Node[]; edges: Edge[] 
   // One node per distinct skill (shared across categories + projects). `real`
   // distinguishes a curated skill from a project-only tool reference.
   skills.forEach((entry, id) => {
+    const usedBy = [...entry.projs].map((pi) => data.projects[pi]?.title).filter(Boolean) as string[];
+    const inCats = [...entry.cats].map((ci) => data.skills[ci]?.title).filter(Boolean) as string[];
     nodes.push({
       id: skillNodeId(id),
       type: "custom",
       position: P,
-      data: { label: entry.label, kind: "leaf", real: entry.real },
+      data: {
+        label: entry.label,
+        kind: "leaf",
+        real: entry.real,
+        meta: {
+          type: "skill",
+          sublabel: entry.real ? "Curated skill" : "Project tool",
+          description: usedBy.length
+            ? `Used in ${listJoin(usedBy)}.`
+            : entry.real
+              ? "Part of the curated skill taxonomy."
+              : "A tool referenced by a project.",
+          tags: inCats,
+        } as NodeMeta,
+      },
     });
   });
 
   // Categories + their skill edges.
   data.skills.forEach((cat, ci) => {
-    nodes.push({ id: catId(ci), type: "custom", position: P, data: { label: cat.title, kind: "hub" } });
+    nodes.push({
+      id: catId(ci),
+      type: "custom",
+      position: P,
+      data: {
+        label: cat.title,
+        kind: "hub",
+        meta: {
+          type: "category",
+          description: `${(cat.skills ?? []).length} skills in this category.`,
+          tags: (cat.skills ?? []).map((s) => s.name),
+        } as NodeMeta,
+      },
+    });
     edges.push({ id: edgeCat(ci), source: HUB_SKILLS, target: catId(ci) });
   });
 
@@ -146,7 +230,18 @@ export function buildGraph(data: PortfolioData): { nodes: Node[]; edges: Edge[] 
       id: projId(pi),
       type: "custom",
       position: P,
-      data: { label: proj.title, kind: "hub", img: proj.imageUrl },
+      data: {
+        label: proj.title,
+        kind: "hub",
+        img: proj.imageUrl,
+        meta: {
+          type: "project",
+          description: proj.description,
+          tags: (proj.tools ?? []).map((t) => t.name),
+          link: proj.link,
+          github: proj.github,
+        } as NodeMeta,
+      },
     });
     edges.push({ id: edgeProjHub(pi), source: HUB_PROJECTS, target: projId(pi) });
   });
@@ -167,7 +262,17 @@ export function buildGraph(data: PortfolioData): { nodes: Node[]; edges: Edge[] 
       id: expId(i),
       type: "custom",
       position: P,
-      data: { label: exp.role, sublabel: exp.company, kind: "hub" },
+      data: {
+        label: exp.role,
+        sublabel: exp.company,
+        kind: "hub",
+        meta: {
+          type: "experience",
+          sublabel: `${exp.company} · ${exp.duration}`,
+          description: exp.description,
+          tags: (exp.achievements ?? []).slice(0, 4),
+        } as NodeMeta,
+      },
     });
     edges.push({ id: edgeExp(i), source: ROOT, target: expId(i) });
   });
